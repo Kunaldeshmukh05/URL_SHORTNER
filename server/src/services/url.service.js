@@ -1,6 +1,6 @@
 import Url, { SHORT_CODE_LENGTH, SHORT_CODE_PATTERN } from "../models/url.model.js";
 import generateCode from "../utils/generateCode.js";
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/apiError.js";
 
 const MAX_CREATE_ATTEMPTS = 5;
 

@@ -1,5 +1,5 @@
 import { MAX_URL_LENGTH } from "../models/url.model.js";
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/apiError.js";
 import getBaseUrl from "../utils/getBaseUrl.js";
 
 export const validateCreateUrl = (req, res, next) => {
