@@ -40,20 +40,19 @@ This app lets users:
 | Category | Feature |
 | --- | --- |
 | **Core** | Create short URLs |
-|          | Generate unique short codes |
-|          | Store URL mappings in MongoDB Atlas |
-|          | Redirect using short URLs |
-|          | Track clicks |
+| | Generate unique short codes |
+| | Store URL mappings in MongoDB Atlas |
+| | Redirect using short URLs |
+| | Track clicks |
 | **Validation** | Required URL validation |
-           | Invalid URL handling |
-           | HTTP/HTTPS protocol validation |
-           | Invalid short code handling |
+| | Invalid URL handling |
+| | HTTP/HTTPS protocol validation |
+| | Invalid short code handling |
 | **Security** | Helmet security headers |
-            | | CORS configuration |
-            | | Rate limiting |
-            | | Environment-based configuration |
-
----
+| | CORS configuration |
+| | Rate limiting |
+| | Environment-based configuration |
+ ---
 
 ## 🛠 Tech Stack
 
