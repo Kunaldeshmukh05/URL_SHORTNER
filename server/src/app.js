@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import urlRoutes from "./routes/url.routes.js";
 import redirectRoutes from "./routes/redirect.routes.js";
-import { notFoundHandler, errorHandler } from "./middlewares/errorHandler.js";
+import { notFoundHandler, errorHandler } from "./middlewares/errorHandler.middleware.js";
 const app = express();
 
 app.use(cors());

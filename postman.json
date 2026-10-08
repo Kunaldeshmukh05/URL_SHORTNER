@@ -1,0 +1,235 @@
+{
+  "info": {
+    "name": "URL Shortener",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "shortCode", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Health check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "2. Create short URL",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('returns a 7 character shortCode and a shortUrl', () => {",
+              "  pm.expect(body.data.shortCode).to.have.lengthOf(7);",
+              "  pm.expect(body.data.shortUrl).to.include(body.data.shortCode);",
+              "});",
+              "pm.collectionVariables.set('shortCode', body.data.shortCode);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"originalUrl\": \"https://example.com/some/long/path?x=1\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/urls", "host": ["{{baseUrl}}"], "path": ["api", "urls"] }
+      }
+    },
+    {
+      "name": "3. Redirect (302)",
+      "protocolProfileBehavior": { "followRedirects": false },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('302 redirect', () => pm.response.to.have.status(302));",
+              "pm.test('Location is the original URL', () => {",
+              "  pm.expect(pm.response.headers.get('Location')).to.eql('https://example.com/some/long/path?x=1');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/{{shortCode}}", "host": ["{{baseUrl}}"], "path": ["{{shortCode}}"] }
+      }
+    },
+    {
+      "name": "4. Stats (clicks counted)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const data = pm.response.json().data;",
+              "pm.test('clicks is at least 1 after the redirect', () => pm.expect(data.clicks).to.be.at.least(1));",
+              "pm.test('lastAccessedAt is set', () => pm.expect(data.lastAccessedAt).to.be.a('string'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/urls/{{shortCode}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "urls", "{{shortCode}}"]
+        }
+      }
+    },
+    {
+      "name": "5. Unknown code returns 404",
+      "protocolProfileBehavior": { "followRedirects": false },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404 Not Found', () => pm.response.to.have.status(404));",
+              "pm.test('code is NOT_FOUND', () => pm.expect(pm.response.json().code).to.eql('NOT_FOUND'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/Zz9Zz9Z", "host": ["{{baseUrl}}"], "path": ["Zz9Zz9Z"] }
+      }
+    },
+    {
+      "name": "6. Missing body returns 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+              "pm.test('code is INVALID_BODY', () => pm.expect(pm.response.json().code).to.eql('INVALID_BODY'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{baseUrl}}/api/urls", "host": ["{{baseUrl}}"], "path": ["api", "urls"] }
+      }
+    },
+    {
+      "name": "7. No protocol returns 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('422 Unprocessable', () => pm.response.to.have.status(422));",
+              "pm.test('code is INVALID_URL', () => pm.expect(pm.response.json().code).to.eql('INVALID_URL'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"originalUrl\": \"example.com\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/urls", "host": ["{{baseUrl}}"], "path": ["api", "urls"] }
+      }
+    },
+    {
+      "name": "8. javascript: URL returns 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('422 Unprocessable', () => pm.response.to.have.status(422));",
+              "pm.test('code is UNSUPPORTED_PROTOCOL', () => pm.expect(pm.response.json().code).to.eql('UNSUPPORTED_PROTOCOL'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"originalUrl\": \"javascript:alert(1)\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/urls", "host": ["{{baseUrl}}"], "path": ["api", "urls"] }
+      }
+    },
+    {
+      "name": "9. Link to this service returns 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('422 Unprocessable', () => pm.response.to.have.status(422));",
+              "pm.test('code is SELF_REFERENCE', () => pm.expect(pm.response.json().code).to.eql('SELF_REFERENCE'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"originalUrl\": \"{{baseUrl}}/Abc1234\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/urls", "host": ["{{baseUrl}}"], "path": ["api", "urls"] }
+      }
+    },
+    {
+      "name": "10. Malformed JSON returns 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+              "pm.test('code is INVALID_JSON', () => pm.expect(pm.response.json().code).to.eql('INVALID_JSON'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"originalUrl\": " },
+        "url": { "raw": "{{baseUrl}}/api/urls", "host": ["{{baseUrl}}"], "path": ["api", "urls"] }
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createUrl, getUrlDetails } from "../controllers/url.controller.js";
-import { validateCreateUrl } from "../middlewares/validateUrl.js";
+import { validateCreateUrl } from "../middlewares/validateUrl.middleware.js";
 
 const router = Router();
 
